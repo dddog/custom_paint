@@ -29,15 +29,18 @@ class _PaintScreenState extends ConsumerState<PaintScreen> {
   @override
   dispose() {
     transformationController.dispose();
+    super.dispose();
   }
 
   init() async {
     image = await loadImage('assets/images/front.png');
+    ref.read(drawStateProvider.notifier).initPart();
   }
 
   @override
   Widget build(BuildContext context) {
     final bool eraseMode = ref.watch(eraseModeStateProvider);
+    final bool selectMode = ref.watch(selectModeStateProvider);
     final drawState = ref.watch(drawStateProvider);
 
     return Scaffold(
@@ -60,7 +63,11 @@ class _PaintScreenState extends ConsumerState<PaintScreen> {
                             if (details.pointerCount == 1) {
                               Offset offset = transformationController
                                   .toScene(details.localFocalPoint);
-                              if (eraseMode) {
+                              if (selectMode) {
+                                ref
+                                    .read(drawStateProvider.notifier)
+                                    .select(offset);
+                              } else if (eraseMode) {
                                 ref
                                     .read(drawStateProvider.notifier)
                                     .erase(offset);
@@ -78,7 +85,11 @@ class _PaintScreenState extends ConsumerState<PaintScreen> {
                                   .toScene(details.localFocalPoint);
                               print(
                                   'update:${details.localFocalPoint}, $offset');
-                              if (eraseMode) {
+                              if (selectMode) {
+                                ref
+                                    .read(drawStateProvider.notifier)
+                                    .select(offset);
+                              } else if (eraseMode) {
                                 ref
                                     .read(drawStateProvider.notifier)
                                     .erase(offset);
@@ -177,6 +188,19 @@ class _PaintScreenState extends ConsumerState<PaintScreen> {
                         onChanged: (value) {
                           ref.read(sizeStateProvider.notifier).state = value;
                         },
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        ref.read(selectModeStateProvider.notifier).state =
+                            !selectMode;
+                      },
+                      child: Text(
+                        '선택',
+                        style: TextStyle(
+                          fontSize: 20,
+                          color: selectMode ? Colors.white : Colors.black12,
+                        ),
                       ),
                     ),
                     TextButton(
